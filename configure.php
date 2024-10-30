@@ -62,7 +62,7 @@ function ask(string $question, string $default = ''): string
 
     $answer = readline('  '.$prompt.': ');
 
-    if (! $answer) {
+    if (!$answer) {
         return $default;
     }
 
@@ -73,7 +73,7 @@ function confirm(string $question, bool $default = false): bool
 {
     $answer = ask($question.' '.($default ? 'Y/n' : 'y/N'));
 
-    if (! $answer) {
+    if (!$answer) {
         return $default;
     }
 
@@ -82,7 +82,7 @@ function confirm(string $question, bool $default = false): bool
 
 function run(string $command): string
 {
-    return trim((string) shell_exec($command));
+    return trim((string)shell_exec($command));
 }
 
 function str_after(string $subject, string $search): string
@@ -255,7 +255,7 @@ function searchCommitsForGitHubUsername(): string
         return [
             'name' => $name,
             'email' => $email,
-            'isMatch' => strtolower($name) === $authorName && ! str_contains($name, '[bot]'),
+            'isMatch' => strtolower($name) === $authorName && !str_contains($name, '[bot]'),
         ];
     }, $committersLines), fn ($item) => $item['isMatch']);
 
@@ -284,12 +284,12 @@ function guessGitHubUsernameUsingCli()
 function guessGitHubUsername(): string
 {
     $username = searchCommitsForGitHubUsername();
-    if (! empty($username)) {
+    if (!empty($username)) {
         return $username;
     }
 
     $username = guessGitHubUsernameUsingCli();
-    if (! empty($username)) {
+    if (!empty($username)) {
         return $username;
     }
 
@@ -435,7 +435,7 @@ writeln('  Ray              '.($useLaravelRay ? green('yes') : dim('no')));
 writeln('  Auto-Changelog   '.($useUpdateChangelogWorkflow ? green('yes') : dim('no')));
 writeln('');
 
-if (! confirm('Modify files?', true)) {
+if (!confirm('Modify files?', true)) {
     exit(1);
 }
 
@@ -449,12 +449,17 @@ foreach ($files as $file) {
         ':author_username' => $authorUsername,
         'author@domain.com' => $authorEmail,
         ':vendor_name' => $vendorName,
-        ':vendor_slug' => $vendorSlug,
+        'vendor_slug' => $vendorSlug,
+        'VendorNameEscaped' => str_replace('\\', '\\\\', $vendorNamespace),
         'VendorName' => $vendorNamespace,
         ':package_name' => $packageName,
         ':package_slug' => $packageSlug,
         'Skeleton' => $className,
         'skeleton' => $packageSlug,
+        'package_slug_without_prefix' => $packageSlugWithoutPrefix,
+        'package_slug' => $packageSlug,
+        'ClassName' => $className,
+        'classname' => $packageSlug,
         'migration_table_name' => title_snake($packageSlug),
         ':variable' => $variableName,
         ':package_description' => $description,
@@ -467,6 +472,16 @@ foreach ($files as $file) {
         str_contains($file, normalizePath('src/Commands/SkeletonCommand.php')) => rename($file, normalizePath('./src/Commands/'.$className.'Command.php')),
         str_contains($file, normalizePath('database/migrations/create_skeleton_table.php.stub')) => rename($file, normalizePath('./database/migrations/create_'.title_snake($packageSlugWithoutPrefix).'_table.php.stub')),
         str_contains($file, normalizePath('config/skeleton.php')) => rename($file, normalizePath('./config/'.$packageSlugWithoutPrefix.'.php')),
+        str_contains($file, normalizePath('src/Providers/ClassNameServiceProvider.php')) => rename($file, normalizePath('./src/Providers/' . $className . 'ServiceProvider.php')),
+        str_contains($file, normalizePath('src/Console/Commands/ClassNameCommand.php')) => rename($file, normalizePath('./src/Console/Commands/' . $className . 'Command.php')),
+        str_contains($file, normalizePath('src/Http/Controllers/ClassNameController.php')) => rename($file, normalizePath('./src/Http/Controllers/' . $className . 'Controller.php')),
+        str_contains($file, normalizePath('src/Models/ClassName.php')) => rename($file, normalizePath('./src/Models/' . $className . '.php')),
+        str_contains($file, normalizePath('database/migrations/0000_00_00_000000_create_classname_table.php')) => rename($file, normalizePath('./database/migrations/0000_00_00_000000_create_' . title_snake($packageSlugWithoutPrefix) . '_table.php')),
+        str_contains($file, normalizePath('database/factories/ClassNameFactory.php')) => rename($file, normalizePath('./database/factories/' . $className . 'Factory.php')),
+        str_contains($file, normalizePath('database/seeders/ClassNameSeeder.php')) => rename($file, normalizePath('./database/seeders/' . $className . 'Seeder.php')),
+        str_contains($file, normalizePath('config/classname.php')) => rename($file, normalizePath('./config/' . $packageSlugWithoutPrefix . '.php')),
+        str_contains($file, normalizePath('routes/classname.php')) => rename($file, normalizePath('./routes/' . $packageSlugWithoutPrefix . '.php')),
+        str_contains($file, normalizePath('tests/ClassNameTest.php')) => rename($file, normalizePath('./tests/' . $className . 'Test.php')),
         str_contains($file, 'README.md') => remove_readme_paragraphs($file),
         default => null,
     };
@@ -521,7 +536,7 @@ if (! empty($removeDeps) || ! empty($removeScripts)) {
     writeln(green('  ✓ Cleaned up composer.json'));
 }
 
-confirm('Execute `composer install` and run tests?', true) && run('composer install && composer test');
+confirm('Execute `composer install` and run tests?', true) && run('composer install && composer format && composer test');
 
 writeln('');
 confirm('Let this script delete itself?', true) && unlink(__FILE__);

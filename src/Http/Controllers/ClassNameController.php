@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace VendorName\ClassName\Http\Controllers;
 
 class ClassNameController

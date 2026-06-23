@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use VendorName\ClassName\Models\ClassName;
 
 test('command exists', function () {
